@@ -4,6 +4,8 @@
 
 TraceLog lets admins upload audio files and get instant AI-generated transcripts powered by Google Gemini. Built with Next.js 16, PostgreSQL, and deployed on Railway.
 
+🌐 **Live:** [https://tracelog-production.up.railway.app](https://tracelog-production.up.railway.app)
+
 ---
 
 ## 🔑 Demo Credentials

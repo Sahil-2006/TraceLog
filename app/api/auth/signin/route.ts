@@ -84,7 +84,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Signin error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error",
+        detail: process.env.NODE_ENV !== "production" ? String(error) : undefined
+      },
       { status: 500 }
     );
   }
