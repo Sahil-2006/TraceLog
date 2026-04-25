@@ -1,0 +1,7 @@
+{
+  "datasources": {
+    "db": {
+      "url": "postgresql://postgres:TpuJgrsnQPXwGoARVrNVCCqXFSkLyAIW@postgres.railway.internal:5432/railway"
+    }
+  }
+}
