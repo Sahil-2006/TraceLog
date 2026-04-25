@@ -3,7 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { db } from "./db";
 
 export const auth = betterAuth({
-  database: prismaAdapter(db),
+  database: prismaAdapter(db, { provider: "postgresql" }),
   secret: process.env.BETTER_AUTH_SECRET || "fallback-secret-key-for-development",
   appName: "TraceLog",
   baseURL: process.env.NEXTAUTH_URL || "http://localhost:3000",
