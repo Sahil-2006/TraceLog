@@ -6,6 +6,16 @@ TraceLog lets admins upload audio files and get instant AI-generated transcripts
 
 ---
 
+## 🔑 Demo Credentials
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@tracelog.com` | `admin123` |
+
+> Login at `/login` — only admin can access the dashboard and upload audio files.
+
+---
+
 ## ✨ Features
 
 - 🔐 **Authentication** — Secure login/signup with JWT-based sessions
