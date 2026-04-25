@@ -7,7 +7,9 @@ import { signOut } from "@/lib/auth-client";
 interface User {
   id: string;
   email: string;
-  name?: string;
+  name: string | null;
+  role: string;
+  image: string | null;
 }
 
 interface TranscriptEntry {
