@@ -38,8 +38,8 @@
 In Railway Dashboard, go to your app service → Variables tab and add:
 
 ```env
-# Database
-DATABASE_URL=postgresql://postgres:password@host:port/railway
+# Database (set this from Railway's protected variable reference)
+DATABASE_URL=<Railway PostgreSQL connection URL>
 
 # Authentication (generate secure secrets)
 BETTER_AUTH_SECRET=your-super-secret-key-here-32-chars-min
@@ -71,16 +71,13 @@ railway deploy
 
 ## Step 5: Initialize Database
 
-After deployment, run the setup script:
+After the Prisma schema is applied, run the administrator setup script once with `TRACELOG_ADMIN_EMAIL` and `TRACELOG_ADMIN_PASSWORD` supplied as protected command variables:
 
 ```bash
 railway run node deploy-setup.mjs
 ```
 
-Or in Railway Dashboard:
-- Go to your service → Deployments
-- Click on latest deployment → View Logs
-- The setup should run automatically after build
+The application startup check only validates database connectivity and required secrets. It does not apply schema changes or create administrator accounts. Provision administrators explicitly with the setup command.
 
 ## Step 6: Access Your Application
 
@@ -88,18 +85,16 @@ Or in Railway Dashboard:
    - In Railway Dashboard → Your service → Settings → Domains
    - Copy the generated URL (e.g., `https://tracelog-production.railway.app`)
 
-2. **Login as Admin:**
-   - Email: `admin@tracelog.com`
-   - Password: `admin123`
+2. **Login as Admin:** use the administrator provisioned from protected environment values. Never use local demo credentials on the deployed service.
 
 ## Environment Variables Reference
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:...@containers.railway.app:5432/railway` |
-| `BETTER_AUTH_SECRET` | Secret for JWT tokens (32+ chars) | `a1b2c3d4e5f6...` |
-| `BETTER_AUTH_URL` | Your app's public URL | `https://your-app.railway.app` |
-| `GEMINI_API_KEY` | Google Gemini API key | `AIza...` |
+| `DATABASE_URL` | PostgreSQL connection string | Set from Railway's protected variable reference |
+| `BETTER_AUTH_SECRET` | Secret for JWT tokens (32+ chars) | Generate a unique random value |
+| `NEXTAUTH_URL` | Your app's public URL | `https://your-app.railway.app` |
+| `GEMINI_API_KEY` | Google Gemini API key | Set from Google AI Studio's protected value |
 | `NODE_ENV` | Environment | `production` |
 
 ## Troubleshooting

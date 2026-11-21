@@ -96,7 +96,7 @@ Create/Update `d:\TraceLog\.env.local`:
 
 ```env
 # 1. PostgreSQL Connection (from Railway)
-DATABASE_URL=postgresql://postgres:PASSWORD@containers.railway.app:PORT/railway
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 
 # 2. Authentication Secret (generate random 32+ chars)
 BETTER_AUTH_SECRET=your_random_secret_here
@@ -156,7 +156,7 @@ npm run dev
 1. Visit http://localhost:3000/login
 2. Enter credentials:
    - Email: `admin@tracelog.com`
-   - Password: `admin123`
+   - Password: `local demo password (see the README local offline demo section)`
 3. Upload an audio file and transcribe!
 
 **Total Setup Time**: ~15-20 minutes
@@ -240,7 +240,7 @@ CREATE TABLE "Transcript" (
 
 Once database is connected, verify:
 
-- [ ] Login with `admin@tracelog.com` / `admin123`
+- [ ] Login with `admin@tracelog.com` / `local demo password (see the README local offline demo section)`
 - [ ] Dashboard loads successfully
 - [ ] Can select MP3 file
 - [ ] File upload button works

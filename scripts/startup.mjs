@@ -1,53 +1,27 @@
-import { execSync } from 'child_process';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
-import bcrypt from 'bcryptjs';
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-console.log('🚀 Running startup script...');
-
-// Step 1: Push database schema
-try {
-  console.log('📋 Pushing database schema...');
-  execSync('npx prisma db push --skip-generate', { stdio: 'inherit' });
-  console.log('✅ Schema pushed successfully');
-} catch (err) {
-  console.error('❌ Schema push failed:', err.message);
-  // Don't exit — tables might already exist
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL is required; startup will not use an in-memory database in deployment.");
+  process.exit(1);
+}
+if (!process.env.BETTER_AUTH_SECRET || Buffer.byteLength(process.env.BETTER_AUTH_SECRET, "utf8") < 32) {
+  console.error("BETTER_AUTH_SECRET must be configured with at least 32 characters.");
+  process.exit(1);
 }
 
-// Step 2: Create admin user if not exists
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 10000 });
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 try {
-  console.log('👤 Checking admin user...');
-  
-  const existing = await prisma.user.findUnique({
-    where: { email: 'admin@tracelog.com' }
-  });
-
-  if (!existing) {
-    const hashed = await bcrypt.hash('admin123', 10);
-    await prisma.user.create({
-      data: {
-        email: 'admin@tracelog.com',
-        name: 'Admin User',
-        password: hashed,
-        role: 'ADMIN',
-        emailVerified: true,
-      }
-    });
-    console.log('✅ Admin user created: admin@tracelog.com / admin123');
-  } else {
-    console.log('ℹ️  Admin user already exists');
-  }
-} catch (err) {
-  console.error('❌ Admin setup failed:', err.message);
+  await prisma.$connect();
+  await prisma.$queryRaw`SELECT 1`;
+  console.log("TraceLog database connection is ready.");
+} catch {
+  console.error("TraceLog could not connect to its database. Startup stopped.");
+  process.exitCode = 1;
 } finally {
   await prisma.$disconnect();
   await pool.end();
 }
-
-console.log('✅ Startup complete');

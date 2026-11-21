@@ -45,7 +45,7 @@ npm install
 
 # 3. Set up environment (.env.local)
 GEMINI_API_KEY=your_key_here
-DATABASE_URL=postgresql://user:pass@host:port/database
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 BETTER_AUTH_SECRET=generate_random_string
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=generate_random_string
@@ -88,7 +88,7 @@ curl -X POST http://localhost:3000/api/transcribe \
 
 Default credentials:
 - Email: `admin@tracelog.com`
-- Password: `admin123`
+- Password: `local demo password (see the README local offline demo section)`
 
 Or click **"Skip Login"** button to bypass authentication.
 
@@ -162,7 +162,7 @@ d:\TraceLog/
 
 ```env
 # Database (Railway PostgreSQL)
-DATABASE_URL=postgresql://user:pass@shuttle.proxy.rlwy.net:port/database
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 
 # Google Gemini API
 GEMINI_API_KEY=your_key_from_makersuite.google.com

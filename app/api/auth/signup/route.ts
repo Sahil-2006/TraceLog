@@ -4,19 +4,22 @@ import { db } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name } = await request.json();
+    const body = await request.json().catch(() => null);
+    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    const password = typeof body?.password === "string" ? body.password : "";
+    const name = typeof body?.name === "string" ? body.name.trim() : "";
 
     // Validate input
-    if (!email || !password || !name) {
+    if (!email || !password || !name || email.length > 254 || name.length > 80 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
-        { error: "Email, password, and name are required" },
+        { error: "Enter a valid email, a name, and a password." },
         { status: 400 }
       );
     }
 
-    if (password.length < 6) {
+    if (password.length < 12 || Buffer.byteLength(password, "utf8") > 72) {
       return NextResponse.json(
-        { error: "Password must be at least 6 characters long" },
+        { error: "Password must be 12 or more characters and no more than 72 UTF-8 bytes." },
         { status: 400 }
       );
     }
@@ -28,8 +31,8 @@ export async function POST(request: NextRequest) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 400 }
+        { error: "An account already exists for this email." },
+        { status: 409 }
       );
     }
 
@@ -59,10 +62,10 @@ export async function POST(request: NextRequest) {
       message: "Account created successfully",
     });
   } catch (error) {
-    console.error("Signup error:", error);
+    console.error("Signup failed.");
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      { error: "Unable to create an account right now." },
+      { status: 503 }
     );
   }
 }

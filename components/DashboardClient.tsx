@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "@/lib/auth-client";
 
 interface User {
   id: string;
@@ -27,8 +26,11 @@ export default function DashboardClient({ user }: { user?: User }) {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [transcriptSource, setTranscriptSource] = useState<"GEMINI" | "DEMO_SAMPLE" | "UNKNOWN">("UNKNOWN");
+  const [saveWarning, setSaveWarning] = useState("");
   const [error, setError] = useState("");
   const [history, setHistory] = useState<TranscriptEntry[]>([]);
+  const [historyError, setHistoryError] = useState("");
   const [historyLoading, setHistoryLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -55,19 +57,21 @@ export default function DashboardClient({ user }: { user?: User }) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file size (< 1 MB = ~1 min audio)
+      // Keep browser and server upload limits aligned.
       if (file.size > 10 * 1024 * 1024) {
         setError("File size must be less than 10 MB");
         return;
       }
 
       // Validate file type
-      if (!file.type.startsWith("audio/")) {
+      const supportedTypes = new Set(["audio/mpeg", "audio/wav", "audio/x-wav", "audio/wave", "audio/ogg", "audio/mp4", "audio/x-m4a"]);
+      if (!supportedTypes.has(file.type.toLowerCase())) {
         setError("Please select a valid audio file");
         return;
       }
 
       setError("");
+      setSaveWarning("");
       setAudioFile(file);
     }
   };
@@ -80,7 +84,9 @@ export default function DashboardClient({ user }: { user?: User }) {
 
     setLoading(true);
     setError("");
+    setSaveWarning("");
     setTranscript("");
+    setTranscriptSource("UNKNOWN");
 
     try {
       const formData = new FormData();
@@ -91,15 +97,18 @@ export default function DashboardClient({ user }: { user?: User }) {
         body: formData,
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Transcription failed");
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success || typeof data.transcript !== "string") {
+        throw new Error(data?.error || "Transcription failed");
       }
-
-      const data = await response.json();
       setTranscript(data.transcript);
+      setTranscriptSource(data.source === "DEMO_SAMPLE" ? "DEMO_SAMPLE" : data.source === "GEMINI" ? "GEMINI" : "UNKNOWN");
       setAudioFile(null);
-      fetchHistory(); // Refresh history after successful upload
+      if (data.saved) {
+        void fetchHistory();
+      } else {
+        setSaveWarning(data.message || "Transcription finished, but it could not be saved to history. Copy the text before leaving this page.");
+      }
 
       // Reset file input
       const fileInput = document.querySelector(
@@ -116,12 +125,12 @@ export default function DashboardClient({ user }: { user?: User }) {
   const fetchHistory = async () => {
     try {
       const res = await fetch("/api/transcripts");
-      if (res.ok) {
-        const data = await res.json();
-        setHistory(data.transcripts);
-      }
+      if (!res.ok) throw new Error("Transcript history is unavailable.");
+      const data = await res.json();
+      setHistory(data.transcripts);
+      setHistoryError("");
     } catch {
-      // silently fail
+      setHistoryError("Transcript history could not be loaded. Check the database connection and refresh.");
     } finally {
       setHistoryLoading(false);
     }
@@ -159,34 +168,18 @@ export default function DashboardClient({ user }: { user?: User }) {
   const handleLogout = async () => {
     try {
       setLoggingOut(true);
-      
-      const result = await signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            // Clear any local state
-            setHistory([]);
-            setTranscript("");
-            setAudioFile(null);
-            // Navigate to login
-            router.push("/login");
-          },
-          onError: (error) => {
-            console.error("Logout error:", error);
-            // Force navigation even if there's an error
-            router.push("/login");
-          },
-        },
-      });
-      
-      // Fallback navigation if the callback doesn't work
-      setTimeout(() => {
-        router.push("/login");
-      }, 1000);
-      
-    } catch (error) {
-      console.error("Logout failed:", error);
-      // Force navigation on error
-      router.push("/login");
+      const response = await fetch("/api/auth/signout", { method: "POST" });
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.success) throw new Error("Sign out failed.");
+      setHistory([]);
+      setTranscript("");
+      setAudioFile(null);
+      setTranscriptSource("UNKNOWN");
+      setSaveWarning("");
+      router.replace("/login");
+      router.refresh();
+    } catch {
+      setError("Sign out could not be completed. Try again.");
     } finally {
       setLoggingOut(false);
     }
@@ -431,6 +424,16 @@ export default function DashboardClient({ user }: { user?: User }) {
               <h3 className="text-lg font-semibold text-slate-900 mb-4">
                 Latest Transcript
               </h3>
+              {transcriptSource === "DEMO_SAMPLE" && (
+                <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900" role="status">
+                  Demo sample only: this text was not transcribed from your uploaded audio. Configure a Gemini API key for real transcription.
+                </p>
+              )}
+              {saveWarning && (
+                <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900" role="alert">
+                  {saveWarning}
+                </p>
+              )}
               <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
                 <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
                   {transcript}
@@ -457,6 +460,8 @@ export default function DashboardClient({ user }: { user?: User }) {
 
           {historyLoading ? (
             <p className="text-slate-500 text-sm">Loading...</p>
+          ) : historyError ? (
+            <p className="text-red-700 text-sm" role="alert">{historyError}</p>
           ) : history.length === 0 ? (
             <p className="text-slate-500 text-sm">No transcripts yet. Upload an audio file to get started.</p>
           ) : (

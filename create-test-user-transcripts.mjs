@@ -1,87 +1,39 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
-import bcrypt from 'bcryptjs';
-import dotenv from 'dotenv';
+import bcrypt from "bcryptjs";
+import dotenv from "dotenv";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-// Load environment variables
+dotenv.config({ path: ".env.local" });
 dotenv.config();
-
-// Create PostgreSQL connection pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-// Create Prisma adapter
-const adapter = new PrismaPg(pool);
-
-// Create Prisma client with adapter
-const prisma = new PrismaClient({
-  adapter,
-});
-
-async function createTestUserAndTranscripts() {
-  try {
-    console.log('👤 Creating test user and transcripts...\n');
-
-    // Create a regular user
-    const hashedPassword = await bcrypt.hash('user123', 10);
-    
-    let testUser;
-    try {
-      testUser = await prisma.user.create({
-        data: {
-          email: 'user@tracelog.com',
-          name: 'Test User',
-          password: hashedPassword,
-          role: 'USER',
-        },
-      });
-      console.log('✅ Created test user: user@tracelog.com');
-    } catch (error) {
-      if (error.code === 'P2002') {
-        // User already exists, get the existing user
-        testUser = await prisma.user.findUnique({
-          where: { email: 'user@tracelog.com' },
-        });
-        console.log('ℹ️  Test user already exists: user@tracelog.com');
-      } else {
-        throw error;
-      }
-    }
-
-    // Create transcripts for the test user
-    const userTranscripts = [
-      {
-        text: "Personal voice memo: Remember to pick up groceries on the way home. Need milk, bread, and eggs for tomorrow's breakfast.",
-        fileName: "voice-memo-groceries.mp3",
-        userId: testUser.id,
-      },
-      {
-        text: "Interview recording with candidate John Smith for the software engineer position. He has 5 years of experience in React and Node.js.",
-        fileName: "interview-john-smith.wav",
-        userId: testUser.id,
-      },
-    ];
-
-    console.log('📝 Creating transcripts for test user...');
-    
-    for (const transcript of userTranscripts) {
-      await prisma.transcript.create({
-        data: transcript,
-      });
-      console.log(`   ✅ Created: ${transcript.fileName}`);
-    }
-
-    console.log('\n🎉 Test user and transcripts created successfully!');
-    console.log('   Admin can now see transcripts from multiple users in the dashboard.');
-
-  } catch (error) {
-    console.error('❌ Error creating test user and transcripts:', error);
-  } finally {
-    await prisma.$disconnect();
-    await pool.end();
-  }
+if (process.env.NODE_ENV === "production" || process.env.TRACELOG_ALLOW_SAMPLE_DATA !== "true") {
+  throw new Error("Sample user and transcript creation is limited to explicitly enabled non-production environments.");
 }
+if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required.");
+const testPassword = process.env.TRACELOG_TEST_PASSWORD;
+if (!testPassword || testPassword.length < 12) throw new Error("Set TRACELOG_TEST_PASSWORD to a unique password of at least 12 characters.");
 
-createTestUserAndTranscripts();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
+try {
+  let user = await prisma.user.findUnique({ where: { email: "user@tracelog.com" } });
+  if (!user) {
+    user = await prisma.user.create({ data: {
+      email: "user@tracelog.com", name: "Test User", password: await bcrypt.hash(testPassword, 12), role: "USER", emailVerified: true,
+    } });
+  }
+  const count = await prisma.transcript.count({ where: { userId: user.id } });
+  if (count === 0) {
+    await prisma.transcript.createMany({ data: [
+      { text: "Sample transcript for the TraceLog local evaluation workspace.", fileName: "sample-1.mp3", userId: user.id },
+      { text: "Second sample transcript for the TraceLog local evaluation workspace.", fileName: "sample-2.wav", userId: user.id },
+    ] });
+  }
+  console.log("Local sample account and transcripts are ready; no password was printed.");
+} catch {
+  console.error("Sample data setup failed. Check the database and local-only guard settings.");
+  process.exitCode = 1;
+} finally {
+  await prisma.$disconnect();
+  await pool.end();
+}

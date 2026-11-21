@@ -1,12 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
+import { createDemoDb } from "./demo-store";
+import { isLocalDemoMode } from "./runtime-mode";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | null };
 
-let prismaClient: PrismaClient;
+let prismaClient: PrismaClient | any;
 
-if (!globalForPrisma.prisma) {
+const shouldUseDemoDb = isLocalDemoMode();
+
+if (shouldUseDemoDb) {
+  prismaClient = createDemoDb();
+} else if (!globalForPrisma.prisma) {
   // Create PostgreSQL connection pool
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,

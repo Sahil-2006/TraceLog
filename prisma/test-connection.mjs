@@ -3,9 +3,14 @@
  */
 
 import pkg from "pg";
+import dotenv from "dotenv";
 const { Client } = pkg;
 
-const connectionString = "postgresql://postgres:TpuJgrsnQPXwGoARVrNVCCqXFSkLyAIW@shuttle.proxy.rlwy.net:48103/railway";
+dotenv.config({ path: ".env.local" });
+dotenv.config();
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error("DATABASE_URL is required.");
 
 const client = new Client({
   connectionString,
@@ -17,8 +22,7 @@ const client = new Client({
 (async () => {
   try {
     console.log("🔌 Attempting connection with 30 second timeout...");
-    console.log("Server: shuttle.proxy.rlwy.net:48103");
-    console.log("Database: railway");
+    console.log("Checking the configured database connection...");
     
     await client.connect();
   console.log("✅ Connected!");

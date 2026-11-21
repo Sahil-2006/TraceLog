@@ -75,16 +75,5 @@ CREATE INDEX IF NOT EXISTS "idx_account_user_id" ON "Account"("userId");
 CREATE INDEX IF NOT EXISTS "idx_transcript_user_id" ON "Transcript"("userId");
 CREATE INDEX IF NOT EXISTS "idx_user_email" ON "User"("email");
 
--- Insert admin user
-INSERT INTO "User" ("id", "email", "name", "password", "role", "emailVerified")
-VALUES (
-  gen_random_uuid()::text,
-  'admin@tracelog.com',
-  'Admin User',
-  '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/hMxDv7u7G', -- bcrypt hash of 'admin123'
-  'ADMIN',
-  true
-)
-ON CONFLICT ("email") DO UPDATE SET
-  "role" = 'ADMIN',
-  "emailVerified" = true;
+-- No default administrator is inserted here. Provision one with the
+-- environment-backed setup-admin.mjs script after creating the schema.

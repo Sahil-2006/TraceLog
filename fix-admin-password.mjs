@@ -1,45 +1,28 @@
-import { PrismaClient } from '@prisma/client';
+import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
+import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
-import bcrypt from 'bcryptjs';
-import dotenv from 'dotenv';
 
+dotenv.config({ path: ".env.local" });
 dotenv.config();
+const email = process.env.TRACELOG_ADMIN_EMAIL?.trim().toLowerCase();
+const password = process.env.TRACELOG_ADMIN_PASSWORD;
+if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required.");
+if (process.env.TRACELOG_CONFIRM_PASSWORD_RESET !== "true") throw new Error("Set TRACELOG_CONFIRM_PASSWORD_RESET=true after verifying the account owner.");
+if (!email || !password || password.length < 12) throw new Error("Set the administrator email and a unique password of at least 12 characters.");
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
-
-async function fixAdminPassword() {
-  try {
-    console.log('🔄 Fixing admin password...');
-    
-    const hashedPassword = await bcrypt.hash('admin123', 12);
-    
-    const updatedAdmin = await prisma.user.update({
-      where: { email: 'admin@tracelog.com' },
-      data: { password: hashedPassword }
-    });
-    
-    console.log('✅ Admin password updated successfully');
-    
-    // Verify the password works
-    const admin = await prisma.user.findUnique({
-      where: { email: 'admin@tracelog.com' }
-    });
-    
-    if (admin?.password) {
-      const isValid = await bcrypt.compare('admin123', admin.password);
-      console.log('✅ Password verification:', isValid ? 'SUCCESS' : 'FAILED');
-    }
-    
-  } catch (error) {
-    console.error('❌ Error:', error);
-  } finally {
-    await prisma.$disconnect();
-  }
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
+try {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || user.role !== "ADMIN") throw new Error("The verified administrator account was not found.");
+  await prisma.user.update({ where: { email }, data: { password: await bcrypt.hash(password, 12) } });
+  console.log("Administrator password reset. The supplied password was not printed.");
+} catch {
+  console.error("Password reset failed. Check the database, account, and confirmation settings.");
+  process.exitCode = 1;
+} finally {
+  await prisma.$disconnect();
+  await pool.end();
 }
-
-fixAdminPassword();

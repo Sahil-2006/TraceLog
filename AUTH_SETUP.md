@@ -57,10 +57,7 @@ Run the setup script to create the admin user:
 npm run setup:admin
 ```
 
-This will create an admin user with:
-- Email: `admin@tracelog.com`
-- Password: `admin123` (change this in production!)
-- Role: `ADMIN`
+For local offline demo mode, use the credentials in the README. For database mode, set `TRACELOG_ADMIN_EMAIL` and `TRACELOG_ADMIN_PASSWORD` to protected values and run `npm run setup:admin`; it creates or explicitly promotes the verified account with the `ADMIN` role.
 
 ### 5. Test the System
 
@@ -72,7 +69,7 @@ This will create an admin user with:
 2. Visit `http://localhost:3000`
 3. You'll be redirected to the login page
 4. Try both login methods:
-   - Email/Password with admin credentials
+   - Email/Password with the local demo or provisioned administrator credentials
    - Google OAuth (if configured)
 
 ## User Roles
@@ -122,7 +119,7 @@ This will create an admin user with:
 
 1. Set production environment variables
 2. Update Google OAuth redirect URIs for production domain
-3. Change default admin password
+3. Provision an administrator with a unique password through the protected setup command
 4. Enable HTTPS for secure authentication
 5. Set `NODE_ENV=production`
 

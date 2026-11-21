@@ -1,10 +1,11 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { db } from "./db";
+import { getAuthSecret } from "./runtime-mode";
 
 export const auth = betterAuth({
   database: prismaAdapter(db, { provider: "postgresql" }),
-  secret: process.env.BETTER_AUTH_SECRET || "fallback-secret-key-for-development",
+  secret: getAuthSecret(),
   appName: "TraceLog",
   baseURL: process.env.NEXTAUTH_URL || "http://localhost:3000",
   logger: {

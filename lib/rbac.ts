@@ -1,16 +1,12 @@
-import { auth } from "./auth";
 import { db } from "./db";
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { getAuthSecret } from "./runtime-mode";
 
 export enum Role {
   ADMIN = "ADMIN",
   USER = "USER",
 }
-
-const secret = new TextEncoder().encode(
-  process.env.BETTER_AUTH_SECRET || "fallback-secret-key"
-);
 
 export async function getCurrentUser() {
   try {
@@ -22,7 +18,14 @@ export async function getCurrentUser() {
     }
 
     // Verify JWT token
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(getAuthSecret()));
+    if (typeof payload.userId !== "string") return null;
+
+    const session = await db.session.findUnique({
+      where: { token },
+      select: { userId: true, expiresAt: true },
+    });
+    if (!session || session.userId !== payload.userId || new Date(session.expiresAt) <= new Date()) return null;
 
     // Get user from database
     const user = await db.user.findUnique({
@@ -38,7 +41,7 @@ export async function getCurrentUser() {
 
     return user;
   } catch (error) {
-    console.error("Error getting current user:", error);
+    console.error("Error validating TraceLog session.");
     return null;
   }
 }

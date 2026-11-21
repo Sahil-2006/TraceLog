@@ -28,12 +28,13 @@ export default function LoginPage() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
-      if (response.ok) {
-        router.push("/dashboard");
+      if (response.ok && data?.success) {
+        router.replace("/dashboard");
+        router.refresh();
       } else {
-        setError(data.error || "Login failed. Please try again.");
+        setError(data?.error || "Login failed. Please try again.");
       }
     } catch (err: any) {
       setError("An error occurred. Please try again.");

@@ -2,27 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { SignJWT } from "jose";
-
-const secret = new TextEncoder().encode(
-  process.env.BETTER_AUTH_SECRET || "fallback-secret-key"
-);
+import { getAuthSecret } from "@/lib/runtime-mode";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json().catch(() => null);
+    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    const password = typeof body?.password === "string" ? body.password : "";
 
     // Validate input
-    if (!email || !password) {
+    if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !password || Buffer.byteLength(password, "utf8") > 72) {
       return NextResponse.json(
-        { error: "Email and password are required" },
+        { error: "Enter a valid email and password." },
         { status: 400 }
       );
     }
 
-    // Find user
-    const user = await db.user.findUnique({
-      where: { email },
-    });
+    const user = await db.user.findUnique({ where: { email } });
 
     if (!user || !user.password) {
       return NextResponse.json(
@@ -50,16 +46,10 @@ export async function POST(request: NextRequest) {
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
       .setExpirationTime("7d")
-      .sign(secret);
+      .sign(new TextEncoder().encode(getAuthSecret()));
 
-    // Create session in database
-    const session = await db.session.create({
-      data: {
-        userId: user.id,
-        token,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      },
-    });
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await db.session.create({ data: { userId: user.id, token, expiresAt } });
 
     // Set cookie
     const response = NextResponse.json({
@@ -77,18 +67,13 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: "/",
+      expires: expiresAt,
     });
 
     return response;
   } catch (error) {
-    console.error("Signin error:", error);
-    return NextResponse.json(
-      { 
-        error: "Internal server error",
-        detail: process.env.NODE_ENV !== "production" ? String(error) : undefined
-      },
-      { status: 500 }
-    );
+    console.error("Signin failed.");
+    return NextResponse.json({ error: "Unable to sign in right now." }, { status: 503 });
   }
 }

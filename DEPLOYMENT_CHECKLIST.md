@@ -56,7 +56,7 @@ Set these in Railway Dashboard → Your Service → Variables:
 ## Post-Deployment Verification
 
 - [ ] App loads at Railway URL
-- [ ] Admin login works (admin@tracelog.com / admin123)
+- [ ] Admin login works with the account provisioned from protected `TRACELOG_ADMIN_EMAIL` and `TRACELOG_ADMIN_PASSWORD` values
 - [ ] Dashboard displays properly
 - [ ] File upload works
 - [ ] Transcription works (requires GEMINI_API_KEY)
@@ -89,6 +89,4 @@ railway connect postgres
 Once deployed, your TraceLog application will be available at:
 `https://your-project-name.railway.app`
 
-Login with:
-- **Email:** admin@tracelog.com
-- **Password:** admin123
+Log in with the administrator provisioned from protected `TRACELOG_ADMIN_EMAIL` and `TRACELOG_ADMIN_PASSWORD` values. Never use local demo credentials on the deployed service.

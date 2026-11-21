@@ -89,7 +89,7 @@ Create or update `.env.local`:
 
 ```env
 # PostgreSQL Database Connection (Railway)
-DATABASE_URL=postgresql://user:password@host:port/database_name
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 
 # Better Auth Secret (generate a random 32+ char string)
 BETTER_AUTH_SECRET=your_random_secret_at_least_32_characters_long
@@ -135,7 +135,7 @@ npm run db:seed
 
 This creates the admin user:
 - **Email**: `admin@tracelog.com`
-- **Password**: `admin123`
+- **Password**: `local demo password (see the README local offline demo section)`
 
 > ⚠️ Change this password immediately in production!
 
@@ -162,7 +162,7 @@ Navigate to: `http://localhost:3000/login`
 
 ### 3. Login with Demo Credentials
 - **Email**: `admin@tracelog.com`
-- **Password**: `admin123`
+- **Password**: `local demo password (see the README local offline demo section)`
 
 ### 4. Test Audio Upload
 - Select an MP3 file (< 10 MB / ~1 min)
@@ -266,7 +266,7 @@ model Transcript {
 ### "DATABASE_URL is required"
 - Verify `.env.local` has valid PostgreSQL connection string
 - Check Railway PostgreSQL is running
-- Connection format: `postgresql://user:password@host:port/dbname`
+- Connection format: `postgresql://USER:PASSWORD@HOST:PORT/DATABASE`
 
 ### "Unauthorized" on dashboard
 - Make sure admin user was created with `npm run db:seed`

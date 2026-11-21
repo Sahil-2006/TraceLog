@@ -4,7 +4,7 @@
 
 Your `DATABASE_URL` in `.env.local` is still a **placeholder**:
 ```env
-DATABASE_URL=postgresql://user:password@host:port/database
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 ```
 
 This won't work! You need a **real PostgreSQL connection string from Railway**.
@@ -32,7 +32,7 @@ This won't work! You need a **real PostgreSQL connection string from Railway**.
 3. Under "Postgres Connection URL", you'll see your full connection string
 4. It looks like:
    ```
-   postgresql://postgres:AbCdEf1234@containers.railway.app:5432/railway
+   postgresql://USER:PASSWORD@HOST:PORT/DATABASE
    ```
 5. **Click the copy button** to copy it exactly
 
@@ -44,7 +44,7 @@ This won't work! You need a **real PostgreSQL connection string from Railway**.
    - `PGUSER`: postgres
    - `PGPASSWORD`: random-password-here
    - `PGDATABASE`: railway
-3. Combine them: `postgresql://postgres:PASSWORD@HOST:PORT/DBNAME`
+3. Combine them: `postgresql://USER:PASSWORD@HOST:PORT/DATABASE`
 
 ---
 
@@ -55,12 +55,12 @@ This won't work! You need a **real PostgreSQL connection string from Railway**.
 
 **Before:**
 ```env
-DATABASE_URL=postgresql://user:password@host:port/database
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 ```
 
 **After (example):**
 ```env
-DATABASE_URL=postgresql://postgres:AbCdEf1234567890@containers.railway.app:5432/railway
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 ```
 
 3. Make sure:
@@ -109,7 +109,7 @@ If you skip this, you'll get an error when uploading audio. But you can add it l
 
 ```env
 # PostgreSQL from Railway
-DATABASE_URL=postgresql://postgres:yourPasswordHere@containers.railway.app:5432/railway
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 
 # Random 32-char secret
 BETTER_AUTH_SECRET=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q
@@ -149,16 +149,13 @@ The database has been successfully synchronized with the schema "prisma/schema.p
 
 ## ✅ Step 6: Create Admin User
 
+Set `TRACELOG_ADMIN_EMAIL` and a unique `TRACELOG_ADMIN_PASSWORD` (12 or more characters) in the current process before running the bootstrap command. It does not print or reset passwords.
+
 ```bash
 npm run db:seed
 ```
 
-**Expected output:**
-```
-✅ Admin user created successfully!
-📧 Email: admin@tracelog.com
-🔑 Password: admin123
-```
+Use the supplied email and password to sign in. The fixed credentials in the README are for the local offline demo only.
 
 ---
 
@@ -170,9 +167,7 @@ npm run dev
 
 Visit: **http://localhost:3000/login**
 
-Login with:
-- Email: `admin@tracelog.com`
-- Password: `admin123`
+For a database-backed install, sign in with the administrator credentials you supplied to the bootstrap command. For the offline demo, use the local-only credentials in the README.
 
 ---
 
@@ -196,7 +191,7 @@ Login with:
 
 ### "database \"railway\" does not exist"
 - ✅ Wrong database name in connection string
-- ✅ Should be: `postgresql://user:pass@host:port/railway`
+- ✅ Should be: `postgresql://USER:PASSWORD@HOST:PORT/DATABASE`
 - ✅ Railway defaults to `railway` as database name
 
 ---

@@ -56,8 +56,8 @@ ORM:         Prisma 7.8.0
 ### 2. Verify Environment Variables
 ```bash
 # Check .env.local contains:
-GEMINI_API_KEY=AIzaSyA_EFY4yw-GhVCaHXl7pOnN5whCy6VbrI
-DATABASE_URL=postgresql://postgres:TpuJgrsnQPXwGoARVrNVCCqXFSkLyAIW@shuttle.proxy.rlwy.net:48103/railway
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 ```
 
 ### 3. Clean Git History (Optional but Recommended)

@@ -53,5 +53,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Run startup (schema push + admin creation) then start the app
+# Verify required production configuration and database connectivity, then start the app
 CMD node scripts/startup.mjs && node server.js

@@ -22,8 +22,8 @@ export default function SignupPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+    if (password.length < 12) {
+      setError("Password must be at least 12 characters long");
       return;
     }
 
@@ -126,6 +126,8 @@ export default function SignupPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              minLength={12}
+              maxLength={72}
               required
               disabled={loading}
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-slate-50 disabled:cursor-not-allowed transition"

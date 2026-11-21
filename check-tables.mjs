@@ -3,9 +3,14 @@
  */
 
 import pkg from "pg";
+import dotenv from "dotenv";
 const { Client } = pkg;
 
-const connectionString = "postgresql://postgres:TpuJgrsnQPXwGoARVrNVCCqXFSkLyAIW@shuttle.proxy.rlwy.net:48103/railway";
+dotenv.config({ path: ".env.local" });
+dotenv.config();
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error("DATABASE_URL is required.");
 
 const client = new Client({ connectionString });
 

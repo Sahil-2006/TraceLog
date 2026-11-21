@@ -31,7 +31,7 @@ TraceLog requires a PostgreSQL database to store transcripts and user data. This
 3. Under "Postgres Connection URL", copy the full connection string
 4. It should look like:
    ```
-   postgresql://postgres:RANDOM_PASSWORD@containers.railway.app:PORT/railway
+   postgresql://USER:PASSWORD@HOST:PORT/DATABASE
    ```
 
 ### Method 2: From Environment Variables
@@ -53,7 +53,7 @@ Open `d:\TraceLog\.env.local` and update:
 
 ```env
 # Paste the connection string from Railway
-DATABASE_URL=postgresql://postgres:your_password@containers.railway.app:12345/railway
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 
 # Generate a random secret (see instructions below)
 BETTER_AUTH_SECRET=your_random_32char_secret_here
@@ -107,7 +107,7 @@ bash ./setup-db.sh
 # Run migrations to create tables
 npm run db:migrate
 
-# Create admin user
+# Create admin user after setting TRACELOG_ADMIN_EMAIL and TRACELOG_ADMIN_PASSWORD
 npm run db:seed
 ```
 
@@ -123,7 +123,7 @@ npm run db:studio
 ```
 
 You should see:
-- ✅ `User` table (with one admin user: `admin@tracelog.com`)
+- ✅ `User` table (administrator creation is a separate, environment-backed step)
 - ✅ `Transcript` table (empty initially)
 
 ---
@@ -165,7 +165,7 @@ You should see:
 |---------|---------|
 | `npm run db:migrate` | Run pending migrations |
 | `npm run db:push` | Sync schema with database (no migration file) |
-| `npm run db:seed` | Create admin user |
+| `npm run db:seed` | Create the administrator identified by protected environment variables |
 | `npm run db:studio` | Open Prisma Studio UI |
 
 ---
@@ -190,16 +190,9 @@ NODE_ENV=production
 
 ---
 
-## Admin Credentials (After Setup)
+## Administrator account
 
-After running the seed script, you can login with:
-
-| Field | Value |
-|-------|-------|
-| **Email** | `admin@tracelog.com` |
-| **Password** | `admin123` |
-
-⚠️ **IMPORTANT**: Change this password immediately in production!
+`npm run db:seed` creates the administrator named by `TRACELOG_ADMIN_EMAIL` and `TRACELOG_ADMIN_PASSWORD`. No shared production password is stored in the repository. The fixed credentials in the README work only in local offline demo mode.
 
 ---
 

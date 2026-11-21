@@ -3,7 +3,7 @@
 ## Problem
 Your `.env.local` has an **internal** Railway domain:
 ```
-DATABASE_URL=postgresql://postgres:...@postgres.railway.internal:5432/railway
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 ```
 
 The `postgres.railway.internal` domain only works **inside Railway's network**, not from your local computer.
@@ -24,7 +24,7 @@ The `postgres.railway.internal` domain only works **inside Railway's network**, 
 3. Find the one with `containers.railway.app` (NOT `postgres.railway.internal`)
 4. It should look like:
    ```
-   postgresql://postgres:PASSWORD@containers.railway.app:PORT/railway
+   postgresql://USER:PASSWORD@HOST:PORT/DATABASE
    ```
 
 ### Step 3: Update `.env.local`
@@ -50,7 +50,7 @@ Railway might show multiple URLs. Try:
 
 **Build the URL:**
 ```
-postgresql://[PGUSER]:[PGPASSWORD]@[PGHOST]:[PGPORT]/[PGDATABASE]
+postgresql://USER:PASSWORD@HOST:PORT/DATABASE
 ```
 
 ---
@@ -59,7 +59,7 @@ postgresql://[PGUSER]:[PGPASSWORD]@[PGHOST]:[PGPORT]/[PGDATABASE]
 Once you have the public URL, test it:
 ```bash
 # Replace with your actual URL
-$env:DATABASE_URL='postgresql://postgres:password@containers.railway.app:port/railway'
+$env:DATABASE_URL='postgresql://USER:PASSWORD@HOST:PORT/DATABASE'
 node prisma/init-db.mjs
 ```
 

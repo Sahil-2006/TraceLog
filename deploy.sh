@@ -35,6 +35,6 @@ echo "🎉 Deployment completed!"
 echo "📋 Next steps:"
 echo "   1. Go to Railway Dashboard to get your app URL"
 echo "   2. Set environment variables (DATABASE_URL, BETTER_AUTH_SECRET, etc.)"
-echo "   3. Login with admin@tracelog.com / admin123"
+echo Use the administrator provisioned from protected TRACELOG_ADMIN_EMAIL and TRACELOG_ADMIN_PASSWORD values
 echo ""
 echo "🌐 Access Railway Dashboard: https://railway.app/dashboard"

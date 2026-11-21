@@ -1,6 +1,20 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { isLocalDemoMode } from "./runtime-mode";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+
+const getDemoTranscript = (mimeType: string): string => {
+  const sampleText = `Demo transcript generated locally. This app is running in demo mode because no Gemini API key is configured yet.`;
+  if (mimeType.includes("wav")) {
+    return `${sampleText}\n\n[Sample WAV transcription]`;
+  }
+
+  if (mimeType.includes("mp3")) {
+    return `${sampleText}\n\n[Sample MP3 transcription]`;
+  }
+
+  return `${sampleText}\n\n[Sample audio transcription]`;
+};
 
 const transcriptionPrompt = `
 You are a highly accurate transcription engine. 
@@ -30,7 +44,11 @@ const getRetryDelay = (error: any): number | null => {
 
 export const transcribeAudio = async (audioBase64: string, mimeType: string = "audio/mpeg"): Promise<string> => {
   if (!GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY not configured. Check your .env.local file.");
+    if (isLocalDemoMode()) {
+      console.warn("GEMINI_API_KEY not configured; returning an explicitly labelled demo sample.");
+      return getDemoTranscript(mimeType);
+    }
+    throw new Error("GEMINI_API_KEY is required to transcribe audio.");
   }
 
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
